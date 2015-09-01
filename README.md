@@ -9,8 +9,11 @@ Example
 ```
 $ make_sim_pixel_values.py --delay=0.2
 
-# In a different window
+# In a different window plot the brightest 16 pixels in real time
 $ plot_pixel_values.py --n-brightest=16
+
+# Plot all 128 pixels in two windows (kinda slow to start)
+$ plot_pixel_values.py
 ```
 
 To Do
