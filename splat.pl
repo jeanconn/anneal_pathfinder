@@ -71,6 +71,7 @@ $aca_packet = '';		# 224 byte packet of ACA data
 set_limits();
 make_gui();			# Initialize graphics screen
 open_bin_output()  if (defined $opt_out); # Open binary output file if needed
+%WROTE_HEADER = {} if (defined $opt_out);
 
 print $CLEAR_SCREEN;
 $top->after (100, \&process_telem);
@@ -601,12 +602,49 @@ sub decom_aca_packet {
 
 	    apply_cal ($slot);
 	    set_image_array ($slot, $img_type);
+	    write_slot_header($img_type, $slot)
+		if (defined $opt_out
+                        && defined $DAT_fh[$slot]
+                            && not defined $WROTE_HEADER[$slot]
+                    );
 	    write_slot_data($img_type, $slot)
 		if (defined $opt_out && defined $DAT_fh[$slot]);
 	}
     }
     $top->update();
 }    
+
+
+##***************************************************************************
+sub write_slot_header {
+##***************************************************************************
+# write slot data to a file, for the specified slot
+# if temperature etc. data is not available, put out dummy data = -99.
+    my $img_type = shift;
+    my $slot = shift;
+
+    $dutc = $opt_tctm ? $utc1970 : -99;
+    print {$DAT_fh[$slot]} "VCDU"," ","DUTC"," ","SLOT"," ","IMGTYPE"," ";
+    for $i (0 .. 11) {
+	print {$DAT_fh[$slot]} $fields[$slot][$i] , " ";
+    }
+    if (defined $fields[$slot][36]) {
+	for $i (31 .. 36) {
+	    print {$DAT_fh[$slot]} $fields[$slot][$i], " ";
+	}
+    }
+    else {
+	print {$DAT_fh[$slot]} "-99 -99 -99 -99 -99 -99 ";
+    }
+    for $i (0 .. 7) {
+	for $j (0 .. 7) {
+	    print {$DAT_fh[$slot]} "r${i}_c${j} ";
+	}
+    }
+    print {$DAT_fh[$slot]} "\n";
+    $WROTE_HEADER[$slot] = 1;
+}
+
 
 ##***************************************************************************
 sub write_slot_data {
