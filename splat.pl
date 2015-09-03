@@ -12,6 +12,7 @@ use Bit::Vector;
 use Tlm;
 use Tk;
 use Tk::Table;
+use Chandra::Time;
 
 get_options();
 
@@ -624,7 +625,7 @@ sub write_slot_header {
     my $slot = shift;
 
     $dutc = $opt_tctm ? $utc1970 : -99;
-    print {$DAT_fh[$slot]} "VCDU"," ","DUTC"," ","SLOT"," ","IMGTYPE"," ";
+    print {$DAT_fh[$slot]} "VCDU"," ","time"," ","DUTC"," ","SLOT"," ","IMGTYPE"," ";
     for $i (0 .. 11) {
 	print {$DAT_fh[$slot]} $fields[$slot][$i] , " ";
     }
@@ -655,7 +656,8 @@ sub write_slot_data {
     my $slot = shift;
 
     $dutc = $opt_tctm ? $utc1970 : -99;
-    print {$DAT_fh[$slot]} $vcdu," ",$dutc," ",$slot," ",$img_type," ";
+    my $ctime = Chandra::Time->new(time, {format => 'unix'})->secs;
+    print {$DAT_fh[$slot]} $vcdu," ",$ctime," ",$dutc," ",$slot," ",$img_type," ";
     for $i (0 .. 11) {
 	print {$DAT_fh[$slot]} $cal{ $fields[$slot][$i] }[$slot], " ";
     }
