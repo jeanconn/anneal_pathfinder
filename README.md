@@ -13,7 +13,8 @@ $ make_sim_pixel_values.py --delay=0.2
 $ plot_pixel_values.py --n-brightest=16
 
 # Plot all 128 pixels in two windows (kinda slow to start)
-$ plot_pixel_values.py
+$ plot_pixel_values.py --pix-filename pixel_values1.dat
+$ plot_pixel_values.py --pix-filename pixel_values2.dat
 ```
 
 To Do
