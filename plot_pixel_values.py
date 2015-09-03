@@ -24,9 +24,9 @@ def get_opt():
                         help='Fit the dark and scale factor (default=False)')
 
     parser.add_argument('--n-brightest',
-                        default=128,
+                        default=64,
                         type=int,
-                        help='Plot the N brightest (either 128 or n**2)')
+                        help='Plot the N brightest (either 64 or n**2)')
 
     args = parser.parse_args()
     return args
@@ -37,9 +37,9 @@ plt.close(1)
 plt.close(2)
 plt.ion()
 
-if opt.n_brightest == 128:
+if opt.n_brightest == 64:
     N = 8
-    n_fig = 2
+    n_fig = 1
 else:
     N = np.int(np.sqrt(opt.n_brightest))
     n_fig = 1
@@ -55,8 +55,7 @@ for num in range(n_fig):
     axes[0][0].set_xticklabels([])
     axes[0][0].set_yticklabels([])
 
-colnames = ['im{}_r{}_c{}'.format(im, r, c)
-            for im in 0, 1
+colnames = ['r{}_c{}'.format(r, c)
             for r in range(8)
             for c in range(8)]
 
