@@ -94,6 +94,10 @@ while True:
                     ax.autoscale_view()
                 else:
                     ax.plot(x, y)
+                ax.annotate("{}".format(y.name),
+                            xy=(0.5, 0.5), xycoords="axes fraction",
+                            ha='center', va='center',
+                            color='lightgrey')
 
         plt.draw()
         fig.canvas.draw()
