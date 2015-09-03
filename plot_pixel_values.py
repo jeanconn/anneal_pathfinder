@@ -60,23 +60,23 @@ def fit_pix_values(t_ccd, esec):
     return ui.get_fit_results()
 
 
-def print_info_block(fits, dat):
+def print_info_block(fits, last_dat):
     print("*************************************************")
-    print("Time = {}".format(DateTime(dat[-1]['time']).date))
-    print("CCD temperature = {}".format(dat[-1]['TEMPCD']))
-    print("Slot = {}\n".format(dat[-1]['SLOT']))
+    print("Time = {}".format(DateTime(last_dat['time']).date))
+    print("CCD temperature = {}".format(last_dat['TEMPCD']))
+    print("Slot = {}\n".format(last_dat['SLOT']))
     print("Fit values:\n")
     mini_table = []
     for pix_id in sorted(fits):
         fit = fits[pix_id]
-        t_sf = scale_model(fit.parvals, dat[-1]['TEMPCD'])
+        t_sf = scale_model(fit.parvals, last_dat['TEMPCD'])
         m_sf = scale_model(fit.parvals, -19)
-        minus_19_val = dat[-1][pix_id] * m_sf / t_sf
-        mini_table.append([pix_id, dat[-1][pix_id], minus_19_val, fit.parvals[0]])
+        minus_19_val = last_dat[pix_id] * m_sf / t_sf
+        mini_table.append([pix_id, last_dat[pix_id], minus_19_val, fit.parvals[0]])
     mini_table = Table(rows=mini_table,
                        names=['PixId', 'Val', 'Val(-19)', 'Scale'])
-    mini_table['Val(-19)'].format='.2f'
-    mini_table['Scale'].format='.4f'
+    mini_table['Val(-19)'].format = '.2f'
+    mini_table['Scale'].format = '.4f'
     print mini_table
     print "*************************************************"
 
@@ -156,7 +156,7 @@ while True:
                         plt.figure("fitfig_{}".format(y.name))
                         ui.plot_fit(replot=True, overplot=True)
 
-        print_info_block(fits, dat)
+        print_info_block(fits, dat[-1])
         plt.draw()
         fig.canvas.draw()
         fig.canvas.flush_events()
