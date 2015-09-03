@@ -54,9 +54,9 @@ if 'image' not in globals():
 pixels = np.concatenate([image[r0:r0+8, c0:c0+8].flatten(),
                          image[r1:r1+8, c1:c1+8].flatten()])
 
-colnames = ['time', 't_ccd'] + ['r{}_c{}'.format(r, c)
-                                for r in range(8)
-                                for c in range(8)]
+colnames = ['time', 'TEMPCD', 'SLOT'] + ['r{}_c{}'.format(r, c)
+                                         for r in range(8)
+                                         for c in range(8)]
 
 for filename in [opt.pix_filename1, opt.pix_filename2]:
     with open(filename, 'w') as fh:
@@ -82,9 +82,11 @@ for time in np.arange(now.secs, now.secs + 3600, 4.1):
     first_image = pix_readout_electrons.tolist()[0:64]
     second_image = pix_readout_electrons.tolist()[64:]
 
-    for image, pix_filename in zip([first_image, second_image],
-                               [opt.pix_filename1, opt.pix_filename2]):
-        vals = [time, t_ccd] + image
+    for image, pix_filename, slot in zip(
+        [first_image, second_image],
+        [opt.pix_filename1, opt.pix_filename2],
+        [6, 7]):
+        vals = [time, t_ccd, slot] + image
         vals = ['{:.2f}'.format(val) for val in vals]
         with open(pix_filename, 'a') as fh:
             fh.write(' '.join(vals) + '\n')
