@@ -82,9 +82,10 @@ def print_info_block(fits, last_dat):
         if fit is None:
             mini_table.append([pix_id, last_dat[pix_id], np.nan, np.nan])
             continue
-        t_sf = dark_scale_model(fit.parvals, last_dat['TEMPCD'])
-        m_sf = dark_scale_model(fit.parvals, -19)
-        minus_19_val = last_dat[pix_id] * m_sf / t_sf
+        dc = dark_scale_model(fit.parvals, last_dat['TEMPCD'])
+        ref_dc = dark_scale_model(fit.parvals, -19)
+        scale_factor = ref_dc / dc
+        minus_19_val = last_dat[pix_id] * scale_factor
         mini_table.append([pix_id, last_dat[pix_id], minus_19_val, fit.parvals[0]])
     mini_table = Table(rows=mini_table,
                        names=['PixId', 'Val', 'Val(-19)', 'Scale'])
