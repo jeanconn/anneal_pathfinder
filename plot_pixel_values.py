@@ -47,6 +47,7 @@ def fit_pix_values(t_ccd, esec, id=1):
     logger = logging.getLogger("sherpa")
     logger.setLevel(logging.WARN)
     data_id = id
+    ui.clean()
     ui.set_method('simplex')
     ui.set_stat('cash')
     ui.load_user_model(dark_scale_model, 'model')
