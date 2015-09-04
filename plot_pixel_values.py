@@ -17,13 +17,8 @@ def get_opt():
     parser.add_argument('--pix-filename',
                         default='pixel_values.dat',
                         help='Input pixel values filename')
-
     parser.add_argument('--start',
                         help='Start time (default=2000:001)')
-
-    parser.add_argument('--fit-scaling',
-                        action='store_true',
-                        help='Fit the dark and scale factor (default=False)')
     parser.add_argument('--plot-fits',
                         action='store_true')
     parser.add_argument('--n-brightest',
@@ -162,30 +157,29 @@ while True:
                         xy=(0.5, 0.5), xycoords="axes fraction",
                         ha='center', va='center',
                         color='lightgrey')
-            if opt.fit_scaling:
-                # Use only non-zero pixel data for fits
-                nonzero = y != 0
-                # Only fit if more than 5 degC spread in t_ccd
-                t_ccd = dat['TEMPCD'][nonzero]
-                if np.max(t_ccd) - np.min(t_ccd) < 5:
-                    fits[y.name] = None
-                    continue
-                fit = fit_pix_values(t_ccd,
-                                     y[nonzero],
-                                     id=i_col)
-                fits[y.name] = fit
-                if opt.plot_fits:
-                    fitax = fitaxes[r][c]
-                    fitax.clear()
-                    fitax.plot(t_ccd, y[nonzero], '.',
-                               markersize=2.5, color='red')
-                    mp = ui.get_model_plot(i_col)
-                    fitax.plot(mp.x, mp.y, 'k')
-                    fitax.texts = []
-                    fitax.annotate("{}".format(y.name),
-                                   xy=(0.5, 0.5), xycoords="axes fraction",
-                                   ha='center', va='center',
-                                   color='lightgrey')
+            # Use only non-zero pixel data for fits
+            nonzero = y != 0
+            # Only fit if more than 5 degC spread in t_ccd
+            t_ccd = dat['TEMPCD'][nonzero]
+            if np.max(t_ccd) - np.min(t_ccd) < 5:
+                fits[y.name] = None
+                continue
+            fit = fit_pix_values(t_ccd,
+                                 y[nonzero],
+                                 id=i_col)
+            fits[y.name] = fit
+            if opt.plot_fits:
+                fitax = fitaxes[r][c]
+                fitax.clear()
+                fitax.plot(t_ccd, y[nonzero], '.',
+                           markersize=2.5, color='red')
+                mp = ui.get_model_plot(i_col)
+                fitax.plot(mp.x, mp.y, 'k')
+                fitax.texts = []
+                fitax.annotate("{}".format(y.name),
+                               xy=(0.5, 0.5), xycoords="axes fraction",
+                               ha='center', va='center',
+                               color='lightgrey')
 
     print_info_block(fits, dat[-1])
     plt.draw()
