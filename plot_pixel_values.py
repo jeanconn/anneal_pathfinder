@@ -93,21 +93,16 @@ plt.ion()
 
 if opt.n_brightest == 64:
     N = 8
-    n_fig = 1
 else:
     N = np.int(np.sqrt(opt.n_brightest))
-    n_fig = 1
 
-figs = []
-axess = []
-for num in range(n_fig):
-    fig, axes = plt.subplots(N, N, sharex=True, sharey=True,
-                             num=num, figsize=(8, 8))
-    figs.append(fig)
-    axess.append(axes)
-    fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
-    axes[0][0].set_xticklabels([])
-    axes[0][0].set_yticklabels([])
+fig, axes = plt.subplots(N, N, sharex=True, sharey=True,
+                         num=1, figsize=(8, 8))
+fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+axes[0][0].set_xticklabels([])
+axes[0][0].set_yticklabels([])
+
+
 
 colnames = ['r{}_c{}'.format(r, c)
             for r in range(8)
@@ -131,40 +126,37 @@ while True:
         if i in i_brightest:
             cols.append(dat[colname])
 
-    for im in range(n_fig):
-        fig = figs[im]
-        axes = axess[im]
-        i_col = 0
-        fits = {}
-        for r in range(N):
-            for c in range(N):
-                ax = axes[r][c]
-                x = dat['dt']
-                y = cols[i_col]
-                i_col += 1
-                if ax.lines:
-                    l0 = ax.lines[0]
-                    l0.set_data(x, y)
-                    ax.relim()
-                    ax.autoscale_view()
-                else:
-                    ax.plot(x, y)
-                ax.annotate("{}".format(y.name),
-                            xy=(0.5, 0.5), xycoords="axes fraction",
-                            ha='center', va='center',
-                            color='lightgrey')
-                if opt.fit_scaling:
-                    nonzero = y != 0
-                    fit = fit_pix_values(dat['TEMPCD'][nonzero],
-                                         y[nonzero])
-                    fits[y.name] = fit
-                    if opt.plot_fits:
-                        plt.figure("fitfig_{}".format(y.name))
-                        ui.plot_fit(replot=True, overplot=True)
+    i_col = 0
+    fits = {}
+    for r in range(N):
+        for c in range(N):
+            ax = axes[r][c]
+            x = dat['dt']
+            y = cols[i_col]
+            i_col += 1
+            if ax.lines:
+                l0 = ax.lines[0]
+                l0.set_data(x, y)
+                ax.relim()
+                ax.autoscale_view()
+            else:
+                ax.plot(x, y)
+            ax.annotate("{}".format(y.name),
+                        xy=(0.5, 0.5), xycoords="axes fraction",
+                        ha='center', va='center',
+                        color='lightgrey')
+            if opt.fit_scaling:
+                nonzero = y != 0
+                fit = fit_pix_values(dat['TEMPCD'][nonzero],
+                                     y[nonzero])
+                fits[y.name] = fit
+                if opt.plot_fits:
+                    plt.figure("fitfig_{}".format(y.name))
+                    ui.plot_fit(replot=True, overplot=True)
 
-        print_info_block(fits, dat[-1])
-        plt.draw()
-        fig.canvas.draw()
-        fig.canvas.flush_events()
+    print_info_block(fits, dat[-1])
+    plt.draw()
+    fig.canvas.draw()
+    fig.canvas.flush_events()
 
     sleep(5)
