@@ -157,21 +157,19 @@ while True:
                         xy=(0.5, 0.5), xycoords="axes fraction",
                         ha='center', va='center',
                         color='lightgrey')
-            # Use only non-zero pixel data for fits
-            nonzero = y != 0
             # Only fit if more than 5 degC spread in t_ccd
-            t_ccd = dat['TEMPCD'][nonzero]
+            t_ccd = dat['TEMPCD']
             if np.max(t_ccd) - np.min(t_ccd) < 5:
                 fits[y.name] = None
                 continue
             fit = fit_pix_values(t_ccd,
-                                 y[nonzero],
+                                 y,
                                  id=i_col)
             fits[y.name] = fit
             if opt.plot_fits:
                 fitax = fitaxes[r][c]
                 fitax.clear()
-                fitax.plot(t_ccd, y[nonzero], '.',
+                fitax.plot(t_ccd, y, '.',
                            markersize=2.5, color='red')
                 mp = ui.get_model_plot(i_col)
                 fitax.plot(mp.x, mp.y, 'k')
