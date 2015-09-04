@@ -172,6 +172,14 @@ while True:
                                           id=i_col)
             fits[y.name] = {'fit': fit,
                             'modpars': modpars}
+            fitmod = ui.get_model_plot(i_col)
+            if len(ax.lines) > 1:
+                l1 = ax.lines[1]
+                l1.set_data(x, fitmod.y)
+                ax.relim()
+                ax.autoscale_view()
+            else:
+                ax.plot(x, fitmod.y, color='red')
             if opt.plot_fits_curves:
                 fitax = fitaxes[r][c]
                 fitax.clear()
