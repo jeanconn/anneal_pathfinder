@@ -624,19 +624,11 @@ sub write_slot_header {
     my $img_type = shift;
     my $slot = shift;
 
-    $dutc = $opt_tctm ? $utc1970 : -99;
-    print {$DAT_fh[$slot]} "VCDU"," ","time"," ","DUTC"," ","SLOT"," ","IMGTYPE"," ";
+    print {$DAT_fh[$slot]} "VCDU time DUTC SLOT IMGTYPE ";
     for $i (0 .. 11) {
 	print {$DAT_fh[$slot]} $fields[$slot][$i] , " ";
     }
-    if (defined $fields[$slot][36]) {
-	for $i (31 .. 36) {
-	    print {$DAT_fh[$slot]} $fields[$slot][$i], " ";
-	}
-    }
-    else {
-	print {$DAT_fh[$slot]} "-99 -99 -99 -99 -99 -99 ";
-    }
+    print {$DAT_fh[$slot]} "BGDRMS TEMPCD TEMPHOUS TEMPPRIM TEMPSEC BGDSTAT ";
     for $i (0 .. 7) {
 	for $j (0 .. 7) {
 	    print {$DAT_fh[$slot]} "r${i}_c${j} ";
