@@ -48,10 +48,10 @@ def dark_scale_model(pars, t_ccd):
     return scaled_dark_t_ref
 
 
-def fit_pix_values(t_ccd, esec):
+def fit_pix_values(t_ccd, esec, id=1):
     logger = logging.getLogger("sherpa")
     logger.setLevel(logging.WARN)
-    data_id = 1
+    data_id = id
     ui.set_method('simplex')
     ui.set_stat('cash')
     ui.load_user_model(dark_scale_model, 'model')
@@ -91,7 +91,7 @@ def print_info_block(fits, last_dat):
 
 
 plt.close(1)
-plt.close(2)
+plt.close("fitplots")
 plt.ion()
 
 if opt.n_brightest == 64:
@@ -104,6 +104,13 @@ fig, axes = plt.subplots(N, N, sharex=True, sharey=True,
 fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 axes[0][0].set_xticklabels([])
 axes[0][0].set_yticklabels([])
+
+if opt.plot_fits:
+    fitfig, fitaxes = plt.subplots(N, N, sharex=True, sharey=True,
+                                   num="fitplots", figsize=(8, 8))
+    fitfig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+    fitaxes[0][0].set_xticklabels([])
+    fitaxes[0][0].set_yticklabels([])
 
 
 
@@ -157,11 +164,20 @@ while True:
                     fits[y.name] = None
                     continue
                 fit = fit_pix_values(t_ccd,
-                                     y[nonzero])
+                                     y[nonzero],
+                                     id=i_col)
                 fits[y.name] = fit
                 if opt.plot_fits:
-                    plt.figure("fitfig_{}".format(y.name))
-                    ui.plot_fit(replot=True, overplot=True)
+                    fitax = fitaxes[r][c]
+                    fitax.clear()
+                    fitax.plot(t_ccd, y[nonzero], '.',
+                               markersize=2.5, color='red')
+                    mp = ui.get_model_plot(i_col)
+                    fitax.plot(mp.x, mp.y, 'k')
+                    fitax.annotate("{}".format(y.name),
+                                   xy=(0.5, 0.5), xycoords="axes fraction",
+                                   ha='center', va='center',
+                                   color='lightgrey')
 
     print_info_block(fits, dat[-1])
     plt.draw()
