@@ -44,7 +44,7 @@ def dark_scale_model(pars, t_ccd):
     returns : dark_t_ref scaled to the observed temperatures t_ccd
     """
     scale, dark_t_ref = pars
-    scaled_dark_t_ref = dark_t_ref / np.exp(np.log(scale) / 4.0 * (t_ccd - T_CCD_REF))
+    scaled_dark_t_ref = dark_t_ref * np.exp(np.log(scale) / 4.0 * (T_CCD_REF - t_ccd))
     return scaled_dark_t_ref
 
 
