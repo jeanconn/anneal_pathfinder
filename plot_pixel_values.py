@@ -3,10 +3,12 @@
 from time import sleep
 import argparse
 
+import logging
 from scipy.ndimage.filters import median_filter
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.table import Table
+from sherpa import ui
 from Chandra.Time import DateTime
 
 
@@ -15,48 +17,103 @@ def get_opt():
     parser.add_argument('--pix-filename',
                         default='pixel_values.dat',
                         help='Input pixel values filename')
-
     parser.add_argument('--start',
                         help='Start time (default=2000:001)')
-
-    parser.add_argument('--fit-scaling',
-                        action='store_true',
-                        help='Fit the dark and scale factor (default=False)')
-
+    parser.add_argument('--plot-fits',
+                        action='store_true')
     parser.add_argument('--n-brightest',
-                        default=128,
+                        default=64,
                         type=int,
-                        help='Plot the N brightest (either 128 or n**2)')
+                        help='Plot the N brightest (must be n**2)')
 
     args = parser.parse_args()
     return args
 
 opt = get_opt()
 
+T_CCD_REF = -19 # Reference temperature for dark current values in degC
+def dark_scale_model(pars, t_ccd):
+    """
+    dark_t_ref : dark current of a pixel at the reference temperature
+    scale : dark current model scale factor
+    returns : dark_t_ref scaled to the observed temperatures t_ccd
+    """
+    scale, dark_t_ref = pars
+    scaled_dark_t_ref = dark_t_ref * np.exp(np.log(scale) / 4.0 * (T_CCD_REF - t_ccd))
+    return scaled_dark_t_ref
+
+
+def fit_pix_values(t_ccd, esec, id=1):
+    logger = logging.getLogger("sherpa")
+    logger.setLevel(logging.WARN)
+    data_id = id
+    ui.clean()
+    ui.set_method('simplex')
+    ui.set_stat('cash')
+    ui.load_user_model(dark_scale_model, 'model')
+    ui.add_user_pars('model', ['scale', 'dark_t_ref'])
+    ui.set_model(data_id, 'model')
+    ui.load_arrays(data_id,
+                   np.array(t_ccd),
+                   np.array(esec)
+                   )
+    model.scale.val = 0.70
+    ui.freeze(model.scale)
+    # If more than 5 degrees in the temperature range,
+    # thaw and fit for model.scale.  Else just use/return
+    # the fit of dark_t_ref
+    if np.max(t_ccd) - np.min(t_ccd) > 5:
+        # Fit first for dark_t_ref
+        ui.fit(data_id)
+        ui.thaw(model.scale)
+    ui.fit(data_id)
+    return ui.get_fit_results()
+
+
+def print_info_block(fits, last_dat):
+    print("*************************************************")
+    print("Time = {}".format(DateTime(last_dat['time']).date))
+    print("CCD temperature = {}".format(last_dat['TEMPCD']))
+    print("Slot = {}\n".format(last_dat['SLOT']))
+    print("Fit values:\n")
+    mini_table = []
+    for pix_id in sorted(fits):
+        fit = fits[pix_id]
+        dc = dark_scale_model(fit.parvals, last_dat['TEMPCD'])
+        ref_dc = dark_scale_model(fit.parvals, -19)
+        scale_factor = ref_dc / dc
+        minus_19_val = last_dat[pix_id] * scale_factor
+        mini_table.append([pix_id, last_dat[pix_id], minus_19_val, fit.parvals[0]])
+    mini_table = Table(rows=mini_table,
+                       names=['PixId', 'Val', 'Val(-19)', 'Scale'])
+    mini_table['Val(-19)'].format = '.2f'
+    mini_table['Scale'].format = '.4f'
+    print mini_table
+    print "*************************************************"
+
+
 plt.close(1)
-plt.close(2)
+plt.close("fitplots")
 plt.ion()
 
-if opt.n_brightest == 128:
-    N = 8
-    n_fig = 2
-else:
-    N = np.int(np.sqrt(opt.n_brightest))
-    n_fig = 1
+N = np.int(np.sqrt(opt.n_brightest))
 
-figs = []
-axess = []
-for num in range(n_fig):
-    fig, axes = plt.subplots(N, N, sharex=True, sharey=True,
-                             num=num, figsize=(8, 8))
-    figs.append(fig)
-    axess.append(axes)
-    fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
-    axes[0][0].set_xticklabels([])
-    axes[0][0].set_yticklabels([])
+fig, axes = plt.subplots(N, N, sharex=True, sharey=True,
+                         num=1, figsize=(8, 8))
+fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+axes[0][0].set_xticklabels([])
+axes[0][0].set_yticklabels([])
 
-colnames = ['im{}_r{}_c{}'.format(im, r, c)
-            for im in 0, 1
+if opt.plot_fits:
+    fitfig, fitaxes = plt.subplots(N, N, sharex=True, sharey=True,
+                                   num="fitplots", figsize=(8, 8))
+    fitfig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+    fitaxes[0][0].set_xticklabels([])
+    fitaxes[0][0].set_yticklabels([])
+
+
+
+colnames = ['r{}_c{}'.format(r, c)
             for r in range(8)
             for c in range(8)]
 
@@ -78,26 +135,47 @@ while True:
         if i in i_brightest:
             cols.append(dat[colname])
 
-    for im in range(n_fig):
-        fig = figs[im]
-        axes = axess[im]
-        i_col = 0
-        for r in range(N):
-            for c in range(N):
-                ax = axes[r][c]
-                x = dat['dt']
-                y = cols[i_col]
-                i_col += 1
-                if ax.lines:
-                    l0 = ax.lines[0]
-                    l0.set_data(x, y)
-                    ax.relim()
-                    ax.autoscale_view()
-                else:
-                    ax.plot(x, y)
+    i_col = 0
+    fits = {}
+    for r in range(N):
+        for c in range(N):
+            ax = axes[r][c]
+            x = dat['dt']
+            y = cols[i_col]
+            i_col += 1
+            if ax.lines:
+                l0 = ax.lines[0]
+                l0.set_data(x, y)
+                ax.relim()
+                ax.autoscale_view()
+            else:
+                ax.plot(x, y)
+            ax.texts = []
+            ax.annotate("{}".format(y.name),
+                        xy=(0.5, 0.5), xycoords="axes fraction",
+                        ha='center', va='center',
+                        color='lightgrey')
+            t_ccd = dat['TEMPCD']
+            fit = fit_pix_values(t_ccd,
+                                 y,
+                                 id=i_col)
+            fits[y.name] = fit
+            if opt.plot_fits:
+                fitax = fitaxes[r][c]
+                fitax.clear()
+                fitax.plot(t_ccd, y, '.',
+                           markersize=2.5, color='red')
+                mp = ui.get_model_plot(i_col)
+                fitax.plot(mp.x, mp.y, 'k')
+                fitax.texts = []
+                fitax.annotate("{}".format(y.name),
+                               xy=(0.5, 0.5), xycoords="axes fraction",
+                               ha='center', va='center',
+                               color='lightgrey')
 
-        plt.draw()
-        fig.canvas.draw()
-        fig.canvas.flush_events()
+    print_info_block(fits, dat[-1])
+    plt.draw()
+    fig.canvas.draw()
+    fig.canvas.flush_events()
 
     sleep(5)

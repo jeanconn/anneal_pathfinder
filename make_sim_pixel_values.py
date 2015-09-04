@@ -10,13 +10,15 @@ from Ska.Numpy import interpolate
 
 now = DateTime()
 t_readout = 0.016 * 7  # seconds
-pix_filename = 'pixel_values.dat'
 
 
 def get_opt():
     parser = argparse.ArgumentParser(description='Plot pixel values in real time')
-    parser.add_argument('--pix-filename',
-                        default='pixel_values.dat',
+    parser.add_argument('--pix-filename1',
+                        default='pixel_values1.dat',
+                        help='Input pixel values filename')
+    parser.add_argument('--pix-filename2',
+                        default='pixel_values2.dat',
                         help='Input pixel values filename')
 
     parser.add_argument('--delay',
@@ -52,14 +54,15 @@ if 'image' not in globals():
 pixels = np.concatenate([image[r0:r0+8, c0:c0+8].flatten(),
                          image[r1:r1+8, c1:c1+8].flatten()])
 
-colnames = ['time', 't_ccd'] + ['im{}_r{}_c{}'.format(im, r, c)
-                                for im in 0, 1
-                                for r in range(8)
-                                for c in range(8)]
+colnames = ['time', 'TEMPCD', 'SLOT'] + ['r{}_c{}'.format(r, c)
+                                         for r in range(8)
+                                         for c in range(8)]
 
-with open(opt.pix_filename, 'w') as fh:
-    fh.write('# Pixel values in e-/sec\n')
-    fh.write(' '.join(colnames) + '\n')
+for filename in [opt.pix_filename1, opt.pix_filename2]:
+    with open(filename, 'w') as fh:
+        fh.write('# Pixel values in e-/sec\n')
+        fh.write(' '.join(colnames) + '\n')
+
 
 for time in np.arange(now.secs, now.secs + 3600, 4.1):
     print(time - now.secs)
@@ -76,10 +79,17 @@ for time in np.arange(now.secs, now.secs + 3600, 4.1):
     pix_readout_electrons = np.trunc(pix_readout_electrons / 5) * 5
     pix_readout_e_per_sec = pix_readout_electrons / t_readout
 
-    vals = [time, t_ccd] + pix_readout_electrons.tolist()
-    vals = ['{:.2f}'.format(val) for val in vals]
-    with open(opt.pix_filename, 'a') as fh:
-        fh.write(' '.join(vals) + '\n')
+    first_image = pix_readout_electrons.tolist()[0:64]
+    second_image = pix_readout_electrons.tolist()[64:]
+
+    for image, pix_filename, slot in zip(
+        [first_image, second_image],
+        [opt.pix_filename1, opt.pix_filename2],
+        [6, 7]):
+        vals = [time, t_ccd, slot] + image
+        vals = ['{:.2f}'.format(val) for val in vals]
+        with open(pix_filename, 'a') as fh:
+            fh.write(' '.join(vals) + '\n')
 
     if opt.delay:
         sleep(opt.delay)
