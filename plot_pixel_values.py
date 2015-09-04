@@ -75,6 +75,9 @@ def print_info_block(fits, last_dat):
     mini_table = []
     for pix_id in sorted(fits):
         fit = fits[pix_id]
+        if fit is None:
+            mini_table.append([pix_id, last_dat[pix_id], np.nan, np.nan])
+            continue
         t_sf = dark_scale_model(fit.parvals, last_dat['TEMPCD'])
         m_sf = dark_scale_model(fit.parvals, -19)
         minus_19_val = last_dat[pix_id] * m_sf / t_sf
@@ -146,8 +149,14 @@ while True:
                         ha='center', va='center',
                         color='lightgrey')
             if opt.fit_scaling:
+                # Use only non-zero pixel data for fits
                 nonzero = y != 0
-                fit = fit_pix_values(dat['TEMPCD'][nonzero],
+                # Only fit if more than 5 degC spread in t_ccd
+                t_ccd = dat['TEMPCD'][nonzero]
+                if np.max(t_ccd) - np.min(t_ccd) < 5:
+                    fits[y.name] = None
+                    continue
+                fit = fit_pix_values(t_ccd,
                                      y[nonzero])
                 fits[y.name] = fit
                 if opt.plot_fits:
