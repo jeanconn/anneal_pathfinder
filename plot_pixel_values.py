@@ -36,10 +36,16 @@ def get_opt():
 
 opt = get_opt()
 
-
-def scale_model(pars, t_ccd):
-    scale, y_const, x_const = pars
-    return 1 / np.exp(np.log(scale) / 4.0 * (t_ccd - x_const))
+T_CCD_REF = -19 # Reference temperature for dark current values in degC
+def dark_scale_model(pars, t_ccd):
+    """
+    dark_t_ref : dark current of a pixel at the reference temperature
+    scale : dark current model scale factor
+    returns : dark_t_ref scaled to the observed temperatures t_ccd
+    """
+    scale, dark_t_ref = pars
+    scaled_dark_t_ref = dark_t_ref / np.exp(np.log(scale) / 4.0 * (t_ccd - T_CCD_REF))
+    return scaled_dark_t_ref
 
 
 def fit_pix_values(t_ccd, esec):
@@ -48,8 +54,8 @@ def fit_pix_values(t_ccd, esec):
     data_id = 1
     ui.set_method('simplex')
     ui.set_stat('cash')
-    ui.load_user_model(scale_model, 'model')
-    ui.add_user_pars('model', ['scale', 'y_const', 'x_const'])
+    ui.load_user_model(dark_scale_model, 'model')
+    ui.add_user_pars('model', ['scale', 'dark_t_ref'])
     ui.set_model(data_id, 'model')
     ui.load_arrays(data_id,
                    np.array(t_ccd),
@@ -69,8 +75,8 @@ def print_info_block(fits, last_dat):
     mini_table = []
     for pix_id in sorted(fits):
         fit = fits[pix_id]
-        t_sf = scale_model(fit.parvals, last_dat['TEMPCD'])
-        m_sf = scale_model(fit.parvals, -19)
+        t_sf = dark_scale_model(fit.parvals, last_dat['TEMPCD'])
+        m_sf = dark_scale_model(fit.parvals, -19)
         minus_19_val = last_dat[pix_id] * m_sf / t_sf
         mini_table.append([pix_id, last_dat[pix_id], minus_19_val, fit.parvals[0]])
     mini_table = Table(rows=mini_table,
