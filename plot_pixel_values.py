@@ -24,7 +24,7 @@ def get_opt():
     parser.add_argument('--n-brightest',
                         default=64,
                         type=int,
-                        help='Plot the N brightest (either 64 or n**2)')
+                        help='Plot the N brightest (must be n**2)')
 
     args = parser.parse_args()
     return args
@@ -98,10 +98,7 @@ plt.close(1)
 plt.close("fitplots")
 plt.ion()
 
-if opt.n_brightest == 64:
-    N = 8
-else:
-    N = np.int(np.sqrt(opt.n_brightest))
+N = np.int(np.sqrt(opt.n_brightest))
 
 fig, axes = plt.subplots(N, N, sharex=True, sharey=True,
                          num=1, figsize=(8, 8))
