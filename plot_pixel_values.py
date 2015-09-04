@@ -62,6 +62,12 @@ def fit_pix_values(t_ccd, esec, id=1):
                    np.array(esec)
                    )
     model.scale.val = 0.70
+    ui.freeze(model.scale)
+    # Fit first for dark_t_ref
+    ui.fit(data_id)
+    ui.thaw(model.scale)
+    # And then fit for scale
+    # (though dark_t_ref is not frozen)
     ui.fit(data_id)
     return ui.get_fit_results()
 
