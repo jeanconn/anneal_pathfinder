@@ -59,11 +59,13 @@ def fit_pix_values(t_ccd, esec, id=1):
                    )
     model.scale.val = 0.70
     ui.freeze(model.scale)
-    # Fit first for dark_t_ref
-    ui.fit(data_id)
-    ui.thaw(model.scale)
-    # And then fit for scale
-    # (though dark_t_ref is not frozen)
+    # If more than 5 degrees in the temperature range,
+    # thaw and fit for model.scale.  Else just use/return
+    # the fit of dark_t_ref
+    if np.max(t_ccd) - np.min(t_ccd) > 5:
+        # Fit first for dark_t_ref
+        ui.fit(data_id)
+        ui.thaw(model.scale)
     ui.fit(data_id)
     return ui.get_fit_results()
 
@@ -158,11 +160,7 @@ while True:
                         xy=(0.5, 0.5), xycoords="axes fraction",
                         ha='center', va='center',
                         color='lightgrey')
-            # Only fit if more than 5 degC spread in t_ccd
             t_ccd = dat['TEMPCD']
-            if np.max(t_ccd) - np.min(t_ccd) < 5:
-                fits[y.name] = None
-                continue
             fit = fit_pix_values(t_ccd,
                                  y,
                                  id=i_col)
