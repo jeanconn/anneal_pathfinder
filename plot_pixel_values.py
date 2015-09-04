@@ -68,7 +68,7 @@ def fit_pix_values(t_ccd, esec, id=1):
         ui.fit(data_id)
         ui.thaw(model.scale)
     ui.fit(data_id)
-    return ui.get_fit_results()
+    return ui.get_fit_results(), ui.get_model(data_id)
 
 
 def print_info_block(fits, last_dat):
@@ -79,12 +79,13 @@ def print_info_block(fits, last_dat):
     print("Fit values:\n")
     mini_table = []
     for pix_id in sorted(fits):
-        fit = fits[pix_id]
-        dc = dark_scale_model(fit.parvals, last_dat['TEMPCD'])
-        ref_dc = dark_scale_model(fit.parvals, -19)
+        fitinfo = fits[pix_id]
+        m = fitinfo['modpars']
+        dc = dark_scale_model((m.scale.val, m.dark_t_ref.val), last_dat['TEMPCD'])
+        ref_dc = dark_scale_model((m.scale.val, m.dark_t_ref.val), -19)
         scale_factor = ref_dc / dc
         minus_19_val = last_dat[pix_id] * scale_factor
-        mini_table.append([pix_id, last_dat[pix_id], minus_19_val, fit.parvals[0]])
+        mini_table.append([pix_id, last_dat[pix_id], minus_19_val, m.scale.val])
     mini_table = Table(rows=mini_table,
                        names=['PixId', 'Val', 'Val(-19)', 'Scale'])
     mini_table['Val(-19)'].format = '.2f'
@@ -166,11 +167,12 @@ while True:
                         ha='center', va='center',
                         color='lightgrey')
             t_ccd = dat['TEMPCD']
-            fit = fit_pix_values(t_ccd,
-                                 y,
-                                 id=i_col)
-            fits[y.name] = fit
-            if opt.plot_fit_curves:
+            fit, modpars = fit_pix_values(t_ccd,
+                                          y,
+                                          id=i_col)
+            fits[y.name] = {'fit': fit,
+                            'modpars': modpars}
+            if opt.plot_fits_curves:
                 fitax = fitaxes[r][c]
                 fitax.clear()
                 fitax.plot(t_ccd, y, '.',
