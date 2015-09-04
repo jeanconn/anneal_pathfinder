@@ -157,6 +157,7 @@ while True:
                 ax.autoscale_view()
             else:
                 ax.plot(x, y)
+            ax.texts = []
             ax.annotate("{}".format(y.name),
                         xy=(0.5, 0.5), xycoords="axes fraction",
                         ha='center', va='center',
@@ -180,6 +181,7 @@ while True:
                                markersize=2.5, color='red')
                     mp = ui.get_model_plot(i_col)
                     fitax.plot(mp.x, mp.y, 'k')
+                    fitax.texts = []
                     fitax.annotate("{}".format(y.name),
                                    xy=(0.5, 0.5), xycoords="axes fraction",
                                    ha='center', va='center',
