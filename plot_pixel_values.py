@@ -122,8 +122,17 @@ start = DateTime(opt.start or '2000:001')
 while True:
     dat = Table.read(opt.pix_filename, format='ascii.basic', guess=False,
                      fast_reader=True)
+    # Filter:
+    #  first record (usually bad in splat output)
+    #  unknown/unset temperature data (TEMPCD = -99)
+    #  records with very large INTEG time (bad decom?)
+    #  records before set start time
+    dat = dat[1:]
+    dat = dat[dat['TEMPCD'] != -99]
+    dat = dat[dat['INTEG'] < 2.0]
     dat = dat[dat['time'] > start.secs]
     dat['dt'] = dat['time'] - dat['time'][0]
+
 
     for colname in colnames:
         dat[colname] = median_filter(dat[colname], 5)
