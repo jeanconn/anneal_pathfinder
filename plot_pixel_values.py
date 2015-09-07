@@ -178,5 +178,8 @@ while True:
     plt.draw()
     fig.canvas.draw()
     fig.canvas.flush_events()
+    if opt.plot_fit_curves:
+        fitfig.canvas.draw()
+        fitfig.canvas.flush_events()
 
     sleep(5)
