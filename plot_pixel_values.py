@@ -19,8 +19,9 @@ def get_opt():
                         help='Input pixel values filename')
     parser.add_argument('--start',
                         help='Start time (default=2000:001)')
-    parser.add_argument('--plot-fits',
-                        action='store_true')
+    parser.add_argument('--plot-fit-curves',
+                        action='store_true',
+                        help="Plot dark current vs t_ccd curves and fits")
     parser.add_argument('--n-brightest',
                         default=64,
                         type=int,
@@ -104,7 +105,7 @@ fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 axes[0][0].set_xticklabels([])
 axes[0][0].set_yticklabels([])
 
-if opt.plot_fits:
+if opt.plot_fit_curves:
     fitfig, fitaxes = plt.subplots(N, N, sharex=True, sharey=True,
                                    num="fitplots", figsize=(8, 8))
     fitfig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
@@ -160,7 +161,7 @@ while True:
                                  y,
                                  id=i_col)
             fits[y.name] = fit
-            if opt.plot_fits:
+            if opt.plot_fit_curves:
                 fitax = fitaxes[r][c]
                 fitax.clear()
                 fitax.plot(t_ccd, y, '.',
