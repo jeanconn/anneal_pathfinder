@@ -95,6 +95,7 @@ def print_info_block(fits, last_dat):
 
 plt.close(1)
 plt.close("fitplots")
+plt.close("ccdplot")
 plt.ion()
 
 N = np.int(np.sqrt(opt.n_brightest))
@@ -125,6 +126,17 @@ while True:
                      fast_reader=True)
     dat = dat[dat['time'] > start.secs]
     dat['dt'] = dat['time'] - dat['time'][0]
+
+    ccdfig = plt.figure("ccdplot")
+    ccdax = plt.gca()
+    if ccdax.lines:
+        ccdline = ccdax.lines[0]
+        ccdline.set_data(dat['time'], dat['TEMPCD'])
+        ccdax.relim()
+        ccdax.autoscale_view()
+    else:
+        ccdax.plot(dat['time'], dat['TEMPCD'], 'b.')
+
 
     for colname in colnames:
         dat[colname] = median_filter(dat[colname], 5)
