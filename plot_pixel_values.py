@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import os
 from time import sleep
 import argparse
 
@@ -17,6 +17,9 @@ def get_opt():
     parser.add_argument('--pix-filename',
                         default='pixel_values.dat',
                         help='Input pixel values filename')
+    parser.add_argument('--logfile',
+                        default='pix_log',
+                        help='Output log filename')
     parser.add_argument('--start',
                         help='Start time (default=2000:001)')
     parser.add_argument('--plot-fit-curves',
@@ -31,6 +34,16 @@ def get_opt():
     return args
 
 opt = get_opt()
+pix_log = logging.getLogger('pix_log')
+pix_log.setLevel(logging.INFO)
+if not len(pix_log.handlers):
+    filehandler = logging.FileHandler(
+        filename=opt.logfile,
+        mode='a')
+    pix_log.addHandler(filehandler)
+    console = logging.StreamHandler()
+    pix_log.addHandler(console)
+
 
 T_CCD_REF = -19 # Reference temperature for dark current values in degC
 def dark_scale_model(pars, t_ccd):
@@ -72,11 +85,11 @@ def fit_pix_values(t_ccd, esec, id=1):
 
 
 def print_info_block(fits, last_dat):
-    print("*************************************************")
-    print("Time = {}".format(DateTime(last_dat['time']).date))
-    print("CCD temperature = {}".format(last_dat['TEMPCD']))
-    print("Slot = {}\n".format(last_dat['SLOT']))
-    print("Fit values:\n")
+    pix_log.info("*************************************************")
+    pix_log.info("Time = {}".format(DateTime(last_dat['time']).date))
+    pix_log.info("CCD temperature = {}".format(last_dat['TEMPCD']))
+    pix_log.info("Slot = {}\n".format(last_dat['SLOT']))
+    pix_log.info("Fit values:\n")
     mini_table = []
     for pix_id in sorted(fits):
         fitinfo = fits[pix_id]
@@ -90,8 +103,8 @@ def print_info_block(fits, last_dat):
                        names=['PixId', 'Val', 'Val(-19)', 'Scale'])
     mini_table['Val(-19)'].format = '.2f'
     mini_table['Scale'].format = '.4f'
-    print mini_table
-    print "*************************************************"
+    pix_log.info(mini_table)
+    pix_log.info("*************************************************")
 
 
 plt.close(1)
