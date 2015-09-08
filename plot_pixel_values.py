@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from astropy.table import Table
 from sherpa import ui
 from Chandra.Time import DateTime
+from Ska.Matplotlib import plot_cxctime, cxctime2plotdate
 
 
 def get_opt():
@@ -164,11 +165,11 @@ while True:
     ccdax = plt.gca()
     if ccdax.lines:
         ccdline = ccdax.lines[0]
-        ccdline.set_data(dat['time'], dat['TEMPCD'])
+        ccdline.set_data(cxctime2plotdate(dat['time']), dat['TEMPCD'])
         ccdax.relim()
         ccdax.autoscale_view()
     else:
-        ccdax.plot(dat['time'], dat['TEMPCD'], 'b.')
+        plot_cxctime(dat['time'], dat['TEMPCD'], 'b.', ax=ccdax)
 
     for colname in colnames:
         dat[colname] = median_filter(dat[colname], 5)
