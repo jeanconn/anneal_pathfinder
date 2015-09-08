@@ -667,6 +667,8 @@ sub write_slot_data {
 	}
     }
     print {$DAT_fh[$slot]} "\n";
+    $DAT_fh[$slot]->flush();
+    $DAT_fh[$slot]->sync();
 }
 
 ##***************************************************************************
