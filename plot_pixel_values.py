@@ -214,7 +214,7 @@ while True:
                 ax.autoscale_view()
             else:
                 ax.plot(x, fitmod.y, color='red')
-            if opt.plot_fits_curves:
+            if opt.plot_fit_curves:
                 fitax = fitaxes[r][c]
                 fitax.clear()
                 fitax.plot(t_ccd, y, '.',
