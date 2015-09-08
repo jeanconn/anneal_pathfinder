@@ -379,7 +379,7 @@ From linux:
 USAGE
   ; 
 
-  $ACA_DECOM_HOME = "$ENV{SKA}/decom/aca";
+  $ACA_DECOM_HOME = "$ENV{SKA}/data/aca_egse/decom/aca";
   $MAX_EVENT_LOG_LINES = 10000;
   $opt_page = 1;
   $opt_time = 0;
