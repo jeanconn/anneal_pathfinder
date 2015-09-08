@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import os
 from time import sleep
 import argparse
 
