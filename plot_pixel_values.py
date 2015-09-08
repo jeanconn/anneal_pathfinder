@@ -103,16 +103,16 @@ def print_info_block(fits, last_dat):
             dc_temp = dark_scale_model((m.scale.val, m.dark_t_ref.val), t_ccd)
             new_rec.append(dc_temp / ref_dc)
         mini_table.append(new_rec)
-    colnames = ['PixId', 'Val', 'Val(-19)', 'Scale', 'DC(T)/DC(-19)']
+    colnames = ['PixId', 'Val', 'Val(-19)', 'Scale', 'r({:.1f})'.format(last_dat['TEMPCD'])]
     for t_ccd in other_t_ccd:
-        colnames.append("DC({})/DC(-19)".format(str(int(t_ccd))))
+        colnames.append("r({})".format(t_ccd))
     mini_table = Table(rows=mini_table,
                        names=colnames)
     mini_table['Val(-19)'].format = '.2f'
     mini_table['Scale'].format = '.4f'
     for col in mini_table.colnames:
-        if col.startswith('DC'):
-            mini_table[col].format = '.4f'
+        if col.startswith('r('):
+            mini_table[col].format = '.2f'
     pix_log.info(mini_table)
     pix_log.info("*************************************************")
 
