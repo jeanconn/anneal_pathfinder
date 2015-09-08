@@ -7,7 +7,7 @@ import logging
 from scipy.ndimage.filters import median_filter
 import numpy as np
 import matplotlib.pyplot as plt
-from astropy.table import Table
+from astropy.table import Table, hstack, vstack
 from sherpa import ui
 from Chandra.Time import DateTime
 
@@ -20,6 +20,7 @@ def get_opt():
     parser.add_argument('--logfile',
                         default='pix_log',
                         help='Output log filename')
+    parser.add_argument('--table-logfile')
     parser.add_argument('--start',
                         help='Start time (default=2000:001)')
     parser.add_argument('--plot-fit-curves',
@@ -44,6 +45,7 @@ if not len(pix_log.handlers):
     console = logging.StreamHandler()
     pix_log.addHandler(console)
 
+ALL_FIT_TABLE = None
 
 T_CCD_REF = -19 # Reference temperature for dark current values in degC
 def dark_scale_model(pars, t_ccd):
@@ -116,6 +118,17 @@ def print_info_block(fits, last_dat):
             mini_table[col].format = '.4f'
     pix_log.info(mini_table)
     pix_log.info("*************************************************")
+    if opt.table_logfile:
+        horiz_table = hstack([row for row in mini_table])
+        horiz_table['time'] = DateTime(last_dat['time']).date
+        horiz_table['t_ccd'] = last_dat['TEMPCD']
+        horiz_table['slot'] = last_dat['SLOT']
+        global ALL_FIT_TABLE
+        if ALL_FIT_TABLE is not None:
+            ALL_FIT_TABLE = vstack([ALL_FIT_TABLE, horiz_table])
+        else:
+            ALL_FIT_TABLE = horiz_table
+        ALL_FIT_TABLE.write(opt.table_logfile, format='ascii.fixed_width_two_line')
 
 
 plt.close(1)
