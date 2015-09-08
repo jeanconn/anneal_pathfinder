@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import os
 from time import sleep
 import argparse
 
@@ -17,6 +17,9 @@ def get_opt():
     parser.add_argument('--pix-filename',
                         default='pixel_values.dat',
                         help='Input pixel values filename')
+    parser.add_argument('--logfile',
+                        default='pix_log',
+                        help='Output log filename')
     parser.add_argument('--start',
                         help='Start time (default=2000:001)')
     parser.add_argument('--plot-fit-curves',
@@ -31,6 +34,16 @@ def get_opt():
     return args
 
 opt = get_opt()
+pix_log = logging.getLogger('pix_log')
+pix_log.setLevel(logging.INFO)
+if not len(pix_log.handlers):
+    filehandler = logging.FileHandler(
+        filename=opt.logfile,
+        mode='a')
+    pix_log.addHandler(filehandler)
+    console = logging.StreamHandler()
+    pix_log.addHandler(console)
+
 
 T_CCD_REF = -19 # Reference temperature for dark current values in degC
 def dark_scale_model(pars, t_ccd):
@@ -68,33 +81,46 @@ def fit_pix_values(t_ccd, esec, id=1):
         ui.fit(data_id)
         ui.thaw(model.scale)
     ui.fit(data_id)
-    return ui.get_fit_results()
+    return ui.get_fit_results(), ui.get_model(data_id)
 
 
 def print_info_block(fits, last_dat):
-    print("*************************************************")
-    print("Time = {}".format(DateTime(last_dat['time']).date))
-    print("CCD temperature = {}".format(last_dat['TEMPCD']))
-    print("Slot = {}\n".format(last_dat['SLOT']))
-    print("Fit values:\n")
+    pix_log.info("*************************************************")
+    pix_log.info("Time = {}".format(DateTime(last_dat['time']).date))
+    pix_log.info("CCD temperature = {}".format(last_dat['TEMPCD']))
+    pix_log.info("Slot = {}\n".format(last_dat['SLOT']))
+    pix_log.info("Fit values:\n")
     mini_table = []
+    other_t_ccd = [-10, -5, 0, 5, 10]
     for pix_id in sorted(fits):
-        fit = fits[pix_id]
-        dc = dark_scale_model(fit.parvals, last_dat['TEMPCD'])
-        ref_dc = dark_scale_model(fit.parvals, -19)
+        fitinfo = fits[pix_id]
+        m = fitinfo['modpars']
+        dc = dark_scale_model((m.scale.val, m.dark_t_ref.val), last_dat['TEMPCD'])
+        ref_dc = dark_scale_model((m.scale.val, m.dark_t_ref.val), -19)
         scale_factor = ref_dc / dc
         minus_19_val = last_dat[pix_id] * scale_factor
-        mini_table.append([pix_id, last_dat[pix_id], minus_19_val, fit.parvals[0]])
+        new_rec = [pix_id, last_dat[pix_id], minus_19_val, m.scale.val, dc / ref_dc]
+        for t_ccd in other_t_ccd:
+            dc_temp = dark_scale_model((m.scale.val, m.dark_t_ref.val), t_ccd)
+            new_rec.append(dc_temp / ref_dc)
+        mini_table.append(new_rec)
+    colnames = ['PixId', 'Val', 'Val(-19)', 'Scale', 'DC(T)/DC(-19)']
+    for t_ccd in other_t_ccd:
+        colnames.append("DC({})/DC(-19)".format(str(int(t_ccd))))
     mini_table = Table(rows=mini_table,
-                       names=['PixId', 'Val', 'Val(-19)', 'Scale'])
+                       names=colnames)
     mini_table['Val(-19)'].format = '.2f'
     mini_table['Scale'].format = '.4f'
-    print mini_table
-    print "*************************************************"
+    for col in mini_table.colnames:
+        if col.startswith('DC'):
+            mini_table[col].format = '.4f'
+    pix_log.info(mini_table)
+    pix_log.info("*************************************************")
 
 
 plt.close(1)
 plt.close("fitplots")
+plt.close("ccdplot")
 plt.ion()
 
 N = np.int(np.sqrt(opt.n_brightest))
@@ -134,6 +160,15 @@ while True:
     dat = dat[dat['time'] > start.secs]
     dat['dt'] = dat['time'] - dat['time'][0]
 
+    ccdfig = plt.figure("ccdplot")
+    ccdax = plt.gca()
+    if ccdax.lines:
+        ccdline = ccdax.lines[0]
+        ccdline.set_data(dat['time'], dat['TEMPCD'])
+        ccdax.relim()
+        ccdax.autoscale_view()
+    else:
+        ccdax.plot(dat['time'], dat['TEMPCD'], 'b.')
 
     for colname in colnames:
         dat[colname] = median_filter(dat[colname], 5)
@@ -166,10 +201,19 @@ while True:
                         ha='center', va='center',
                         color='lightgrey')
             t_ccd = dat['TEMPCD']
-            fit = fit_pix_values(t_ccd,
-                                 y,
-                                 id=i_col)
-            fits[y.name] = fit
+            fit, modpars = fit_pix_values(t_ccd,
+                                          y,
+                                          id=i_col)
+            fits[y.name] = {'fit': fit,
+                            'modpars': modpars}
+            fitmod = ui.get_model_plot(i_col)
+            if len(ax.lines) > 1:
+                l1 = ax.lines[1]
+                l1.set_data(x, fitmod.y)
+                ax.relim()
+                ax.autoscale_view()
+            else:
+                ax.plot(x, fitmod.y, color='red')
             if opt.plot_fit_curves:
                 fitax = fitaxes[r][c]
                 fitax.clear()
