@@ -209,10 +209,9 @@ while True:
                                 'modpars': modpars}
                 fitmod = ui.get_model_plot(i_col)
             except Exception as exception:
-                logger = logging.getLogger('sherpa')
-                logger.warn('Sherpa fit failed on {}'.format(y.name))
-                logger.warn(exception)
-                logger.warn('Continuing')
+                pix_log.warn('Sherpa fit failed on {}'.format(y.name))
+                pix_log.warn(exception)
+                pix_log.warn('Continuing')
                 fits[y.name] = None
                 continue
             if len(ax.lines) > 1:
