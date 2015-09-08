@@ -90,6 +90,7 @@ def print_info_block(fits, last_dat):
     pix_log.info("Slot = {}\n".format(last_dat['SLOT']))
     pix_log.info("Fit values:\n")
     mini_table = []
+    other_t_ccd = [-10, -5, 0, 5, 10]
     for pix_id in sorted(fits):
         fitinfo = fits[pix_id]
         m = fitinfo['modpars']
@@ -97,11 +98,21 @@ def print_info_block(fits, last_dat):
         ref_dc = dark_scale_model((m.scale.val, m.dark_t_ref.val), -19)
         scale_factor = ref_dc / dc
         minus_19_val = last_dat[pix_id] * scale_factor
-        mini_table.append([pix_id, last_dat[pix_id], minus_19_val, m.scale.val])
+        new_rec = [pix_id, last_dat[pix_id], minus_19_val, m.scale.val, dc / ref_dc]
+        for t_ccd in other_t_ccd:
+            dc_temp = dark_scale_model((m.scale.val, m.dark_t_ref.val), t_ccd)
+            new_rec.append(dc_temp / ref_dc)
+        mini_table.append(new_rec)
+    colnames = ['PixId', 'Val', 'Val(-19)', 'Scale', 'DC(T)/DC(-19)']
+    for t_ccd in other_t_ccd:
+        colnames.append("DC({})/DC(-19)".format(str(int(t_ccd))))
     mini_table = Table(rows=mini_table,
-                       names=['PixId', 'Val', 'Val(-19)', 'Scale'])
+                       names=colnames)
     mini_table['Val(-19)'].format = '.2f'
     mini_table['Scale'].format = '.4f'
+    for col in mini_table.colnames:
+        if col.startswith('DC'):
+            mini_table[col].format = '.4f'
     pix_log.info(mini_table)
     pix_log.info("*************************************************")
 
