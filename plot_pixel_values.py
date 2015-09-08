@@ -106,7 +106,7 @@ def print_info_block(fits, last_dat):
         mini_table.append(new_rec)
     colnames = ['PixId', 'Val', 'Val(-19)', 'Scale', 'r({:.1f})'.format(last_dat['TEMPCD'])]
     for t_ccd in other_t_ccd:
-        colnames.append("r({})".format(str(int(t_ccd))))
+        colnames.append("r({})".format(t_ccd))
     mini_table = Table(rows=mini_table,
                        names=colnames)
     mini_table['Val(-19)'].format = '.2f'
