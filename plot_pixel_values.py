@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 from time import sleep
 import argparse
 
@@ -19,7 +20,6 @@ def get_opt():
                         default='pixel_values.dat',
                         help='Input pixel values filename')
     parser.add_argument('--logfile',
-                        default='pix_log',
                         help='Output log filename')
     parser.add_argument('--start',
                         help='Start time (default=2000:001)')
@@ -35,6 +35,10 @@ def get_opt():
     return args
 
 opt = get_opt()
+if opt.logfile is None:
+    root, ext = os.path.splitext(opt.pix_filename)
+    opt.logfile = "{}.log".format(root)
+
 pix_log = pyyaks.logger.get_logger(name='pix_log',
                                    filename=opt.logfile,
                                    filemode='a',
@@ -237,9 +241,11 @@ while True:
 
     print_info_block(fits, dat[-1])
     plt.draw()
+    fig.suptitle("Slot {}".format(dat[-1]['SLOT']))
     fig.canvas.draw()
     fig.canvas.flush_events()
     if opt.plot_fit_curves:
+        fitfig.suptitle("Slot {}".format(dat[-1]['SLOT']))
         fitfig.canvas.draw()
         fitfig.canvas.flush_events()
 
