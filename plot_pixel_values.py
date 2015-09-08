@@ -241,9 +241,11 @@ while True:
 
     print_info_block(fits, dat[-1])
     plt.draw()
+    fig.suptitle("Slot {}".format(dat[-1]['SLOT']))
     fig.canvas.draw()
     fig.canvas.flush_events()
     if opt.plot_fit_curves:
+        fitfig.suptitle("Slot {}".format(dat[-1]['SLOT']))
         fitfig.canvas.draw()
         fitfig.canvas.flush_events()
 
