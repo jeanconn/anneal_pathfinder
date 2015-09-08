@@ -100,20 +100,22 @@ def print_info_block(fits, last_dat):
         dc = dark_scale_model((m.scale.val, m.dark_t_ref.val), last_dat['TEMPCD'])
         ref_dc = dark_scale_model((m.scale.val, m.dark_t_ref.val), -19)
         scale_factor = ref_dc / dc
-        minus_19_val = last_dat[pix_id] * scale_factor
-        new_rec = [pix_id, last_dat[pix_id], minus_19_val, m.scale.val, dc / ref_dc]
+        rec_esec = last_dat[pix_id] * GAIN / last_dat['INTEG']
+        minus_19_esec =  rec_esec * scale_factor
+        new_rec = [pix_id, rec_esec, minus_19_esec, m.scale.val, dc / ref_dc]
         for t_ccd in other_t_ccd:
             dc_temp = dark_scale_model((m.scale.val, m.dark_t_ref.val), t_ccd)
             new_rec.append(dc_temp / ref_dc)
         mini_table.append(new_rec)
     if not len(mini_table):
         return
-    colnames = ['PixId', 'Val', 'Val(-19)', 'Scale', 'r({:.1f})'.format(last_dat['TEMPCD'])]
+    colnames = ['PixId', 'e-/sec', 'e-/sec(-19)', 'Scale', 'r({:.1f})'.format(last_dat['TEMPCD'])]
     for t_ccd in other_t_ccd:
         colnames.append("r({})".format(t_ccd))
     mini_table = Table(rows=mini_table,
                        names=colnames)
-    mini_table['Val(-19)'].format = '.2f'
+    mini_table['e-/sec'].format = '.2f'
+    mini_table['e-/sec(-19)'].format = '.2f'
     mini_table['Scale'].format = '.4f'
     for col in mini_table.colnames:
         if col.startswith('r('):
