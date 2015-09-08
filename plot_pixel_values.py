@@ -3,6 +3,7 @@ from time import sleep
 import argparse
 
 import logging
+import pyyaks.logger
 from scipy.ndimage.filters import median_filter
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,15 +34,10 @@ def get_opt():
     return args
 
 opt = get_opt()
-pix_log = logging.getLogger('pix_log')
-pix_log.setLevel(logging.INFO)
-if not len(pix_log.handlers):
-    filehandler = logging.FileHandler(
-        filename=opt.logfile,
-        mode='a')
-    pix_log.addHandler(filehandler)
-    console = logging.StreamHandler()
-    pix_log.addHandler(console)
+pix_log = pyyaks.logger.get_logger(name='pix_log',
+                                   filename=opt.logfile,
+                                   filemode='a',
+                                   level=logging.INFO)
 
 
 T_CCD_REF = -19 # Reference temperature for dark current values in degC
@@ -93,6 +89,8 @@ def print_info_block(fits, last_dat):
     other_t_ccd = [-10, -5, 0, 5, 10]
     for pix_id in sorted(fits):
         fitinfo = fits[pix_id]
+        if fitinfo is None:
+            continue
         m = fitinfo['modpars']
         dc = dark_scale_model((m.scale.val, m.dark_t_ref.val), last_dat['TEMPCD'])
         ref_dc = dark_scale_model((m.scale.val, m.dark_t_ref.val), -19)
@@ -103,6 +101,8 @@ def print_info_block(fits, last_dat):
             dc_temp = dark_scale_model((m.scale.val, m.dark_t_ref.val), t_ccd)
             new_rec.append(dc_temp / ref_dc)
         mini_table.append(new_rec)
+    if not len(mini_table):
+        return
     colnames = ['PixId', 'Val', 'Val(-19)', 'Scale', 'r({:.1f})'.format(last_dat['TEMPCD'])]
     for t_ccd in other_t_ccd:
         colnames.append("r({})".format(t_ccd))
@@ -201,12 +201,19 @@ while True:
                         ha='center', va='center',
                         color='lightgrey')
             t_ccd = dat['TEMPCD']
-            fit, modpars = fit_pix_values(t_ccd,
-                                          y,
-                                          id=i_col)
-            fits[y.name] = {'fit': fit,
-                            'modpars': modpars}
-            fitmod = ui.get_model_plot(i_col)
+            try:
+                fit, modpars = fit_pix_values(t_ccd,
+                                              y,
+                                              id=i_col)
+                fits[y.name] = {'fit': fit,
+                                'modpars': modpars}
+                fitmod = ui.get_model_plot(i_col)
+            except Exception as exception:
+                pix_log.warn('Sherpa fit failed on {}'.format(y.name))
+                pix_log.warn(exception)
+                pix_log.warn('Continuing')
+                fits[y.name] = None
+                continue
             if len(ax.lines) > 1:
                 l1 = ax.lines[1]
                 l1.set_data(x, fitmod.y)
