@@ -150,8 +150,10 @@ while True:
     for r in range(N):
         for c in range(N):
             ax = axes[r][c]
+            integ = dat['INTEG']
+            gain = 5.0
             x = dat['dt']
-            y = cols[i_col]
+            y = cols[i_col] * gain / integ
             i_col += 1
             if ax.lines:
                 l0 = ax.lines[0]
