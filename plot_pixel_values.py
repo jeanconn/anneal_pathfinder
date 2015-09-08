@@ -138,12 +138,12 @@ if opt.plot_fit_curves:
     fitaxes[0][0].set_yticklabels([])
 
 
-
 colnames = ['r{}_c{}'.format(r, c)
             for r in range(8)
             for c in range(8)]
 
 start = DateTime(opt.start or '2000:001')
+GAIN = 5.0
 
 while True:
     dat = Table.read(opt.pix_filename, format='ascii.basic', guess=False,
@@ -158,6 +158,7 @@ while True:
     dat = dat[dat['INTEG'] < 2.0]
     dat = dat[dat['time'] > start.secs]
     dat['dt'] = dat['time'] - dat['time'][0]
+    integ = dat['INTEG']
 
     ccdfig = plt.figure("ccdplot")
     ccdax = plt.gca()
@@ -184,10 +185,8 @@ while True:
     for r in range(N):
         for c in range(N):
             ax = axes[r][c]
-            integ = dat['INTEG']
-            gain = 5.0
             x = dat['dt']
-            y = cols[i_col] * gain / integ
+            y = cols[i_col] * GAIN / integ
             i_col += 1
             if ax.lines:
                 l0 = ax.lines[0]
