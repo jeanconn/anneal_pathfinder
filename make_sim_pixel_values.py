@@ -76,11 +76,10 @@ for time in np.arange(now.secs, now.secs + 3600, 4.1):
                                               scale=count_noise,
                                               size=128)
 
-    pix_readout_electrons = np.trunc(pix_readout_electrons / 5) * 5
-    pix_readout_e_per_sec = pix_readout_electrons / t_readout
+    pix_readout_dn = np.trunc(pix_readout_electrons / 5)
 
-    first_image = pix_readout_electrons.tolist()[0:64]
-    second_image = pix_readout_electrons.tolist()[64:]
+    first_image = pix_readout_dn.tolist()[0:64]
+    second_image = pix_readout_dn.tolist()[64:]
 
     for image, pix_filename, slot in zip(
         [first_image, second_image],
