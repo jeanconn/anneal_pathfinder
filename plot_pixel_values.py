@@ -3,6 +3,7 @@ from time import sleep
 import argparse
 
 import logging
+import pyyaks.logger
 from scipy.ndimage.filters import median_filter
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,15 +34,10 @@ def get_opt():
     return args
 
 opt = get_opt()
-pix_log = logging.getLogger('pix_log')
-pix_log.setLevel(logging.INFO)
-if not len(pix_log.handlers):
-    filehandler = logging.FileHandler(
-        filename=opt.logfile,
-        mode='a')
-    pix_log.addHandler(filehandler)
-    console = logging.StreamHandler()
-    pix_log.addHandler(console)
+pix_log = pyyaks.logger.get_logger(name='pix_log',
+                                   filename=opt.logfile,
+                                   filemode='a',
+                                   level=logging.INFO)
 
 
 T_CCD_REF = -19 # Reference temperature for dark current values in degC
