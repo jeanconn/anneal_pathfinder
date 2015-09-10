@@ -75,7 +75,7 @@ def fit_pix_values(t_ccd, esec, id=1):
     # If more than 5 degrees in the temperature range,
     # thaw and fit for model.scale.  Else just use/return
     # the fit of dark_t_ref
-    if np.max(t_ccd) - np.min(t_ccd) > 5:
+    if np.max(t_ccd) - np.min(t_ccd) > 2:
         # Fit first for dark_t_ref
         ui.fit(data_id)
         ui.thaw(model.scale)
