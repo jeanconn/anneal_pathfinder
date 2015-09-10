@@ -72,6 +72,7 @@ def fit_pix_values(t_ccd, esec, id=1):
                    staterror=0.1*np.ones(len(t_ccd)),
                    )
     model.scale.val = 0.70
+    model.dark_t_ref.val = 500
     ui.freeze(model.scale)
     # If more than 5 degrees in the temperature range,
     # thaw and fit for model.scale.  Else just use/return
