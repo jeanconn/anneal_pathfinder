@@ -69,6 +69,7 @@ def fit_pix_values(t_ccd, esec, id=1):
     ui.load_arrays(data_id,
                    np.array(t_ccd),
                    np.array(esec)
+                   staterror=0.1*np.ones(len(t_ccd)),
                    )
     model.scale.val = 0.70
     ui.freeze(model.scale)
