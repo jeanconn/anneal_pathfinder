@@ -63,7 +63,6 @@ def fit_pix_values(t_ccd, esec, id=1):
     data_id = id
     ui.clean()
     ui.set_method('simplex')
-    ui.set_stat('cash')
     ui.load_user_model(dark_scale_model, 'model')
     ui.add_user_pars('model', ['scale', 'dark_t_ref'])
     ui.set_model(data_id, 'model')
