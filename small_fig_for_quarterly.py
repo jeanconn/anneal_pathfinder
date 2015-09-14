@@ -176,8 +176,8 @@ best_pix = 'r2_c2'
 
 N = np.int(np.sqrt(opt.n_brightest))
 
-onefig = plt.figure(figsize=(5,2.5), num='overplots')
-dualfig, axes = plt.subplots(1, 2, figsize=(5,2.5), num='separate')
+onefig = plt.figure(figsize=(5.5,2.75), num='overplots')
+#dualfig, axes = plt.subplots(1, 2, figsize=(5,2.5), num='separate')
 #fig, axes = plt.subplots(N, N, sharex=True, sharey=True,
 #                         num=1, figsize=(8, 8))
 #fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
@@ -218,21 +218,21 @@ dat['dt'] = dat['time'] - dat['time'][0]
 integ = dat['INTEG']
 
 #ccdfig = plt.figure("ccdplot", figsize=(1,1))
-ccdax = axes[0] #plt.gca()
-if ccdax.lines:
-    ccdline = ccdax.lines[0]
-    ccdline.set_data(cxctime2plotdate(dat['time']), dat['TEMPCD'])
-    ccdax.relim()
-    ccdax.autoscale_view()
-else:
-    plot_cxctime(dat['time'], dat['TEMPCD'], 'b.', markersize=4, ax=ccdax)
-    ccdax.grid('on')
-
-
-for colname in colnames:
-    dat[colname] = median_filter(dat[colname], 5)
-maxes = [np.max(dat[colname]) for colname in colnames]
-
+#ccdax = axes[0] #plt.gca()
+#if ccdax.lines:
+#    ccdline = ccdax.lines[0]
+#    ccdline.set_data(cxctime2plotdate(dat['time']), dat['TEMPCD'])
+#    ccdax.relim()
+#    ccdax.autoscale_view()
+#else:
+#    plot_cxctime(dat['time'], dat['TEMPCD'], 'b.', markersize=4, ax=ccdax)
+#    ccdax.grid('on')
+#
+#
+#for colname in colnames:
+#    dat[colname] = median_filter(dat[colname], 5)
+#maxes = [np.max(dat[colname]) for colname in colnames]
+#
 #i_brightest = np.argsort(maxes)[-opt.n_brightest:]
 #cols = []
 #for i, colname in enumerate(colnames):
@@ -241,20 +241,20 @@ maxes = [np.max(dat[colname]) for colname in colnames]
 
 i_col = 0
 fits = {}
-ax = axes[1]
+#ax = axes[1]
 x = dat['dt']
 y = dat[best_pix] * GAIN / integ
-ax.yaxis.set_label_position("right")
-ax.yaxis.tick_right()
-ax.grid()
-plot_cxctime(dat['time'], y, 'k', ax=ax)
-ax.set_ylabel('Dark Current (e-/sec)')
-ccdax.set_ylabel('CCD Temp (DegC)')
-ax.texts = []
-ax.annotate("{}".format(y.name),
-            xy=(0.5, 0.5), xycoords="axes fraction",
-            ha='center', va='center',
-            color='lightgrey')
+#ax.yaxis.set_label_position("right")
+#ax.yaxis.tick_right()
+#ax.grid()
+#plot_cxctime(dat['time'], y, 'k', ax=ax)
+#ax.set_ylabel('Dark Current (e-/sec)')
+#ccdax.set_ylabel('CCD Temp (DegC)')
+#ax.texts = []
+#ax.annotate("{}".format(y.name),
+#            xy=(0.5, 0.5), xycoords="axes fraction",
+#            ha='center', va='center',
+#            color='lightgrey')
 t_ccd = dat['TEMPCD']
 fit, modpars = fit_pix_values(t_ccd,
                               y,
@@ -262,19 +262,24 @@ fit, modpars = fit_pix_values(t_ccd,
 fits[y.name] = {'fit': fit,
                 'modpars': modpars}
 fitmod = ui.get_model_plot(i_col)
-plot_cxctime(DateTime(dat['time'][0]).secs + x, fitmod.y, color='red', ax=ax)
-plt.tight_layout()
+#plot_cxctime(DateTime(dat['time'][0]).secs + x, fitmod.y, color='red', ax=ax)
+#plt.tight_layout()
 plot2 = plot_two(fig_id='overplots',
                  x2=dat['time'], y2=y,
                  x=dat['time'], y=t_ccd,
                  color='blue', color2='black')
 plot_cxctime(DateTime(dat['time'][0]).secs + x, fitmod.y,
              color='red',
-             ax=plot2['ax2'])
+             ax=plot2['ax2'],
+             linewidth=6, alpha=.5,
+             label="dark scale fit"
+             )
+plot2['ax2'].legend(loc='upper left', fontsize=10)
 plot2['ax'].yaxis.label.set_color('blue')
 plot2['ax'].tick_params(axis='y', colors='blue')
 plot2['ax2'].set_ylabel('Dark Current (e-/sec)')
 plot2['ax'].set_ylabel('CCD Temp (DegC)')
+plot2['ax'].tick_params(axis='x', which='major', labelsize=10)
 #plot2['fig'].suptitle('Dark Current, CCD Temp, and Fit vs Time')
 onefig.tight_layout()
 
@@ -282,3 +287,7 @@ print_info_block(fits, dat[-1])
 plt.draw()
 onefig.savefig("annealing.png")
 
+#plot2['ax'].xaxis.set_ticklabels([])
+#onefig.tight_layout()
+#plt.draw()
+#onefig.savefig("annealing_notimes.png")
