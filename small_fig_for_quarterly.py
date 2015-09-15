@@ -17,19 +17,21 @@ from Ska.Matplotlib import plot_cxctime, cxctime2plotdate, set_time_ticks
 def get_opt():
     parser = argparse.ArgumentParser(description='Plot pixel values in real time')
     parser.add_argument('--pix-filename',
-                        default='pixel_values.dat',
+                        default='acaslot7.dat',
                         help='Input pixel values filename')
     parser.add_argument('--logfile',
                         help='Output log filename')
     parser.add_argument('--start',
+                        default="2015:252:13:35:00.000",
                         help='Start time (default=2000:001)')
     parser.add_argument('--stop',
+                        default="2015:252:14:50:00.000",
                         help='Stop time (default=2099:001)')
     parser.add_argument('--plot-fit-curves',
                         action='store_true',
                         help="Plot dark current vs t_ccd curves and fits")
     parser.add_argument('--n-brightest',
-                        default=64,
+                        default=1,
                         type=int,
                         help='Plot the N brightest (must be n**2)')
 
@@ -272,7 +274,7 @@ plot_cxctime(DateTime(dat['time'][0]).secs + x, fitmod.y,
              color='red',
              ax=plot2['ax2'],
              linewidth=6, alpha=.5,
-             label="dark scale fit"
+             label="Dark current model"
              )
 plot2['ax2'].legend(loc='upper left', fontsize=10)
 plot2['ax'].yaxis.label.set_color('blue')
