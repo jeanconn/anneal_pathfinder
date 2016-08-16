@@ -823,6 +823,29 @@ sub print_raw {
       $out .= join '', "\n";
     }
 
+    # Print out some decom about those HDR3 values if available
+    my %hdr3_want = ('dac' => {'val' => $HDR3{7}->{7}->[2],
+                               'scale' => 1,
+                               'fmt' => "%s = %d          \n"},
+                     'ccd_setpoint' => {'val' => $HDR3{7}->{6}->[1],
+                                        'scale' => 0.01,
+                                        'fmt' => "%s = %5.2f      \n"},
+                     'ccd_temp' => {'val' => $HDR3{6}->{7}->[2],
+                                    'scale' => 0.01,
+                                    'fmt' => "%s = %5.2f        \n"});
+
+    for my $msid ('dac', 'ccd_setpoint', 'ccd_temp'){
+        my $val = $hdr3_want{$msid}->{'val'};
+        my $fmt = $hdr3_want{$msid}->{'fmt'};
+        my $scale = $hdr3_want{$msid}->{'scale'};
+        if (defined $val){
+            $out .= sprintf($fmt, $msid, $scale * unpack("s", pack("S", $val)));
+        }
+        else{
+            $out .= "\n";
+        }
+    }
+
     $out .= "\n";
 }
 
