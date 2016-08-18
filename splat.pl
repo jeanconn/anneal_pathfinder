@@ -839,6 +839,8 @@ sub print_raw {
         my $fmt = $hdr3_want{$msid}->{'fmt'};
         my $scale = $hdr3_want{$msid}->{'scale'};
         if (defined $val){
+            # For these values, repack the unsigned 'S' short and unpack as signed 's'
+            # Not sure why they are defined as USHORT in aise_decom_info.dat
             $out .= sprintf($fmt, $msid, $scale * unpack("s", pack("S", $val)));
         }
         else{
