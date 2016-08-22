@@ -44,6 +44,9 @@ $finished_skip = 0;      # only skip forward to a starting VCDU count once!
 
 $time0 = time;
 
+# Add a hash to store the HDR3 data in a somewhat persistent way
+my %HDR3;
+
 #  Get location of ACA pixel data within tlm stream
 #
 for $slot (0..7) {
@@ -472,6 +475,22 @@ sub process_frame {
 	    if ($pea_on) {
 	      check_limits();	# Check limits for various values
 	      process_mem_dump();	# Look for mem dump data, log to file if there
+              # Get the raw HDR3 values, which are either imgtype 6 or 7
+              # and save to the HDR3 global/persistent
+              foreach $slot (0 .. 7) {
+                  if (defined $raw{HDR30}[$slot]){
+                      if ($cal{IMGTYPE}[$slot] == 6){
+                          $HDR3{$slot}->{'6'} = [$raw{HDR30}[$slot],
+                                                 $raw{HDR32}[$slot],
+                                                 $raw{HDR34}[$slot]];
+                      }
+                      if ($cal{IMGTYPE}[$slot] == 7){
+                          $HDR3{$slot}->{'7'} = [$raw{HDR40}[$slot],
+                                                 $raw{HDR42}[$slot],
+                                                 $raw{HDR44}[$slot]];
+                      }
+                  }
+              }
 	      $out = '';
 	      print_raw() if ($opt_raw);
 	      print_img_array() if ($opt_image);
@@ -802,6 +821,31 @@ sub print_raw {
 	$out .= sprintf ("%02x ", $_);
       }
       $out .= join '', "\n";
+    }
+
+    # Print out some decom about those HDR3 values if available
+    my %hdr3_want = ('dac' => {'val' => $HDR3{7}->{7}->[2],
+                               'scale' => 1,
+                               'fmt' => "%s = %d          \n"},
+                     'ccd_setpoint' => {'val' => $HDR3{7}->{6}->[1],
+                                        'scale' => 0.01,
+                                        'fmt' => "%s = %5.2f      \n"},
+                     'ccd_temp' => {'val' => $HDR3{6}->{7}->[2],
+                                    'scale' => 0.01,
+                                    'fmt' => "%s = %5.2f        \n"});
+
+    for my $msid ('dac', 'ccd_setpoint', 'ccd_temp'){
+        my $val = $hdr3_want{$msid}->{'val'};
+        my $fmt = $hdr3_want{$msid}->{'fmt'};
+        my $scale = $hdr3_want{$msid}->{'scale'};
+        if (defined $val){
+            # For these values, repack the unsigned 'S' short and unpack as signed 's'
+            # Not sure why they are defined as USHORT in aise_decom_info.dat
+            $out .= sprintf($fmt, $msid, $scale * unpack("s", pack("S", $val)));
+        }
+        else{
+            $out .= "\n";
+        }
     }
 
     $out .= "\n";
