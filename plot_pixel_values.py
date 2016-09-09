@@ -92,7 +92,7 @@ def print_info_block(fits, last_dat):
     pix_log.info("Slot = {}\n".format(last_dat['SLOT']))
     pix_log.info("Fit values:\n")
     mini_table = []
-    other_t_ccd = [-10, -5, 0, 5, 10]
+    other_t_ccd = [-10, -5, 0, 5, 10, 15]
     for pix_id in sorted(fits):
         fitinfo = fits[pix_id]
         if fitinfo is None:
