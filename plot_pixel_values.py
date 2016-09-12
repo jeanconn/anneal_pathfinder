@@ -209,7 +209,7 @@ while True:
             ax.annotate("{}".format(y.name),
                         xy=(0.5, 0.5), xycoords="axes fraction",
                         ha='center', va='center',
-                        color='lightgrey')
+                        color='grey')
             t_ccd = dat['TEMPCD']
             try:
                 fit, modpars = fit_pix_values(t_ccd,
@@ -242,7 +242,7 @@ while True:
                 fitax.annotate("{}".format(y.name),
                                xy=(0.5, 0.5), xycoords="axes fraction",
                                ha='center', va='center',
-                               color='lightgrey')
+                               color='grey')
 
     print_info_block(fits, dat[-1])
     plt.draw()
