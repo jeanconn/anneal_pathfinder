@@ -70,8 +70,10 @@ def fit_pix_values(t_ccd, esec, id=1):
                    np.array(t_ccd),
                    np.array(esec),
                    )
-    ui.set_staterror(data_id, 0.1 * np.ones(len(t_ccd)))
-    model.scale.val = 0.70
+    ui.set_staterror(data_id, 30 * np.ones(len(t_ccd)))
+    model.scale.val = 0.588
+    model.scale.min = 0.3
+    model.scale.max = 1.0
     model.dark_t_ref.val = 500
     ui.freeze(model.scale)
     # If more than 5 degrees in the temperature range,
@@ -92,7 +94,7 @@ def print_info_block(fits, last_dat):
     pix_log.info("Slot = {}\n".format(last_dat['SLOT']))
     pix_log.info("Fit values:\n")
     mini_table = []
-    other_t_ccd = [-10, -5, 0, 5, 10]
+    other_t_ccd = [-10, -5, 0, 5, 10, 15]
     for pix_id in sorted(fits):
         fitinfo = fits[pix_id]
         if fitinfo is None:
@@ -207,7 +209,7 @@ while True:
             ax.annotate("{}".format(y.name),
                         xy=(0.5, 0.5), xycoords="axes fraction",
                         ha='center', va='center',
-                        color='lightgrey')
+                        color='grey')
             t_ccd = dat['TEMPCD']
             try:
                 fit, modpars = fit_pix_values(t_ccd,
@@ -240,7 +242,7 @@ while True:
                 fitax.annotate("{}".format(y.name),
                                xy=(0.5, 0.5), xycoords="axes fraction",
                                ha='center', va='center',
-                               color='lightgrey')
+                               color='grey')
 
     print_info_block(fits, dat[-1])
     plt.draw()
