@@ -94,7 +94,7 @@ def print_info_block(fits, last_dat):
     pix_log.info("Slot = {}\n".format(last_dat['SLOT']))
     pix_log.info("Fit values:\n")
     mini_table = []
-    other_t_ccd = [-10, -5, 0, 5, 10, 15]
+    other_t_ccd = [0, 10, 15, 20, 25]
     for pix_id in sorted(fits):
         fitinfo = fits[pix_id]
         if fitinfo is None:
@@ -123,6 +123,7 @@ def print_info_block(fits, last_dat):
     for col in mini_table.colnames:
         if col.startswith('r('):
             mini_table[col].format = '.2f'
+    mini_table.sort('e-/sec')
     pix_log.info(mini_table)
     pix_log.info("*************************************************")
 
@@ -165,7 +166,15 @@ while True:
     #  records before set start time
     dat = dat[1:]
     dat = dat[dat['TEMPCD'] != -99]
+    dat = dat[dat['TEMPCD'] > -17]
     dat = dat[dat['INTEG'] < 2.0]
+    dat = dat[dat['r5_c2'] != 1759.75]
+    dat = dat[dat['r6_c5'] != 791.0]
+    dat = dat[dat['r2_c7'] != 584.0]
+    dat = dat[dat['r7_c5'] != 470.0]
+    dat = dat[dat['r2_c0'] != 410.0]
+    dat = dat[dat['r0_c6'] != 235.0]
+    dat = dat[dat['r0_c7'] != 217.0]
     dat = dat[dat['time'] > start.secs]
     dat['dt'] = dat['time'] - dat['time'][0]
     integ = dat['INTEG']
@@ -180,9 +189,9 @@ while True:
     else:
         plot_cxctime(dat['time'], dat['TEMPCD'], 'b.', ax=ccdax)
 
-    for colname in colnames:
-        dat[colname] = median_filter(dat[colname], 5)
-    maxes = [np.max(dat[colname]) for colname in colnames]
+    #for colname in colnames:
+    #    dat[colname] = median_filter(dat[colname], 5)
+    maxes = [np.max(median_filter(dat[colname], 5)) for colname in colnames]
 
     i_brightest = np.argsort(maxes)[-opt.n_brightest:]
     cols = []
